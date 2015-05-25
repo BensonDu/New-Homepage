@@ -1,7 +1,0 @@
-.DS_Store
-.idea
-.gitignore
-application/*/config/database.php
-application/*/config/constants.php
-application/*/config/memcached.php
-application/home/

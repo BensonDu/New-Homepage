@@ -53,7 +53,6 @@
         </div>
     </form>
 </div>
-
 <script type="text/javascript" charset="utf-8" src="<?php echo COMMON_STATIC_PATH;?>admin/ueditor/ueditor.config.js"></script>
 <script type="text/javascript" charset="utf-8" src="<?php echo COMMON_STATIC_PATH;?>admin/ueditor/ueditor.all.min.js"> </script>
 <script type="text/javascript" charset="utf-8" src="<?php echo COMMON_STATIC_PATH;?>admin/ueditor/lang/zh-cn/zh-cn.js"></script>
@@ -63,37 +62,77 @@
         initialFrameWidth:"100%",
         initialFrameHeight:"400"
     });
-    /*hover 文章状态改变*/
+    /*hover 保存到草稿按钮 文章状态改变*/
     $('#btn_draft').hover(function(){
         $('#article_sta').val('2');
     },function(){
         $('#article_sta').val('1');
     });
+
     $.extend({
         DbxSelect:function (c,data,opt) {
             var $all = $('select[data-select-class='+c+']'),
                 $s={},
-                d=JSON.parse(data),
-                l=opt.level.length;
+                l=(function(){
+                    var i;
+                    for(i in opt.level){}
+                    return i;
+                })(),
+                getHtml=function(num) {
+                    var c='';
+                    for(var i in data){
+                        if(data[i].parent==num){
+                            var act=typeof data[i].active!='undefined'?' selected':'';
+                            if(!!$s[i] && !!opt.level[i].defaultText){
+                                c+="<option value='"+opt.level[i].defaultVal+"'>"+opt.level[i].defaultText+"</option>";
+                            }
+                            c+="<option value='"+data[i].id+"'"+act+">"+data[i].name+"</option>";
+                        }
+                    }
+                    return c;
+                },
+                parFilter=function(num){
+                    var a=[],s=0;
+                    for(var i in data){
+                       if(data[i].parent==num){
+                           a.push(i);
+                       }
+                    }
+                    return a;
+                },
+                appendto=function(num,level){
+                    $s[num+1].append(gethtml(num));
+                    for(var i in data)
+                },
+                init=function(){
+                    var num= 0,
+                        level= 1,
+                        con=getHtml(num);
+
+                }
+                ;
             $all.each(function(){
                var level=$(this).data('select-level');
-                if(level){
+                if(level && level<=l){
                     $s[level]=$(this);
                 }
             });
-            if(l>0){
-                var c=opt.level[l].first;
-                for(var i in data){
-                    if(data[i].parent==0){
-                        c+="<option value='"+data[i].id+"'>"+data[i].name+"</option>";
-                    }
-                }
-            }
+            appendto(0);
+
         }
     });
-    $.DbxSelect('type','<?php echo json_encode($type_list) ?>',{
-        level:['',''],
-        active:0
+
+    $.DbxSelect('type',JSON.parse('<?php echo json_encode($type_list) ?>'),{
+        level:{
+            1:{
+                defaultText:'选择分类',
+                defaultVal:0
+            },
+            2:{
+                defaultText:'',
+                defaultVal:0
+            }
+        }
     });
     /*二级selsect*//*
     var type_list='<?php echo json_encode($type_list)?>';

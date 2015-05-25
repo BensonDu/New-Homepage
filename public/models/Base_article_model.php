@@ -8,11 +8,7 @@ class Base_article_model extends Base_db_model
         parent::__construct();
     }
     public function type_list(){
-        $list=$this->select($this->type,null,'*',null,null,'rank','asc');
-        foreach($list as $k => $v){
-            $ret[$v['id']]=$v;
-        }
-        return isset($ret)?$ret:array();
+        return $this->select($this->type,null,'*',null,null,'rank','asc');
     }
     public function new_article($data){
         return $this->insert($this->table,$data);

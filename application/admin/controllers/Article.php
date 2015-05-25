@@ -45,8 +45,13 @@ class Article extends MY_Controller{
             redirect('/article/index');
         }
         else{
+
             $type=$this->base_article_model->type_list();
             $data=$this->base_article_model->article_detail(array('id'=>$id));
+
+            $this->load->library('menutree');
+            $type=$this->menutree->tag_it($type,array('id'=>$data['type']),array('active'=>true));
+
             $this->send_data('article',$data);
             $this->send_data('type_list',$type);
             $this->display('article/edit');

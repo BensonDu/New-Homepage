@@ -58,20 +58,8 @@ var bar=document.getElementById('scrollbar');
         var now=function(){
             return ( new Date() ).getTime();
             },
-            bounce= function(e, f, a, h, g) {
-                if ((f /= g) < (1 / 2.75)) {
-                    return h * (7.5625 * f * f) + a
-                } else {
-                    if (f < (2 / 2.75)) {
-                        return h * (7.5625 * (f -= (1.5 / 2.75)) * f + 0.75) + a
-                    } else {
-                        if (f < (2.5 / 2.75)) {
-                            return h * (7.5625 * (f -= (2.25 / 2.75)) * f + 0.9375) + a
-                        } else {
-                            return h * (7.5625 * (f -= (2.625 / 2.75)) * f + 0.984375) + a
-                        }
-                    }
-                }
+            bounce= function(x, t, b, c, d) {
+                return c*((t=t/d-1)*t*t + 1) + b;
             },
             scroll=function(d){
             var st=document.body.scrollTop,
@@ -92,6 +80,9 @@ var bar=document.getElementById('scrollbar');
 
         };
         document.getElementById('scrollbar').onclick=function(){scroll(1000);}
+        var d= 400,t= 0.5;
+        //console.log(bounce(0,t,0,0,d));
+        //console.log((t/d-1)*t*t+1);
     }).call(this);
 </script>
 </html>

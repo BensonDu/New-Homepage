@@ -51,6 +51,7 @@ class Article extends MY_Controller{
 
             $this->load->library('menutree');
             $type=$this->menutree->tag_it($type,array('id'=>$data['type']),array('active'=>true));
+            //$type=$this->menutree->get_tree($type);
 
             $this->send_data('article',$data);
             $this->send_data('type_list',$type);

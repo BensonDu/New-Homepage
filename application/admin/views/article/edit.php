@@ -69,97 +69,164 @@
         $('#article_sta').val('1');
     });
 
-    $.extend({
-        DbxSelect:function (c,data,opt) {
-            var $all = $('select[data-select-class='+c+']'),
-                $s={},
-                l=(function(){
-                    var i;
-                    for(i in opt.level){}
-                    return i;
-                })(),
-                getHtml=function(num) {
-                    var c='';
-                    for(var i in data){
-                        if(data[i].parent==num){
-                            var act=typeof data[i].active!='undefined'?' selected':'';
-                            if(!!$s[i] && !!opt.level[i].defaultText){
-                                c+="<option value='"+opt.level[i].defaultVal+"'>"+opt.level[i].defaultText+"</option>";
-                            }
-                            c+="<option value='"+data[i].id+"'"+act+">"+data[i].name+"</option>";
+    (function () {
+        var $ = jQuery;
+        var DbxSelectInit=(function(){
+            function Core(type,data,level,option,callback){
+                this.type=type;
+                this.data=data;
+                this.level=[
+                    {defaultText: '', defaultVal: 0}
+                ];
+                this.option={
+                    def_id:'id',
+                    def_parent:'parent',
+                    def_child:'child',
+                    def_active:'active',
+                    def_name:'name'
+                };
+                this.first=true;
+                this.callback=callback;
+                this.$all=$('select[data-select-class='+this.type+']');
+                this.init(data,level,option,callback);
+            }
+            Core.prototype.init=function(data,lev,opt,call){
+                var $this=this,$every=this.$every=[];
+                if(typeof lev != 'undefined'){
+                    $.extend(true,this.level,lev);
+                }
+                if(typeof opt == 'object'){
+                    $.extend(true,this.option,opt);
+                }
+                if(typeof opt == 'function'){
+                    this.callback=opt;
+                }
+                if(typeof data == 'string'){
+                    try{
+                        this.data=JSON.parse(data);
+                    }
+                    catch (e){
+
+                    }
+                }
+                this.$all.change(function(){
+                   $this.eventBind($(this).val(),$(this).data('select-level'));
+                });
+
+                this.$all.each(function () {
+                    var offset=$(this).data('select-level');
+                    $every[offset-1]=$(this);
+                });
+                this.firstFill();
+                //this.debug();
+            };
+            Core.prototype.debug=function(){
+
+            };
+            /*首次执行（需对active 处理）*/
+            Core.prototype.firstFill=function(){
+                var len=this.$all.length;
+                if(len!=this.level.length){
+                    return false;
+                }
+                for(var i=0;i<len;i++){
+                    if(i==0){
+                        this.level[i].data=this.dataGetChild(i);
+                    }
+                    else{
+                        var act=this.getActive(this.level[i-1].data);
+                        if(!!act){
+                            this.level[i].data=this.dataGetChild(act);
                         }
                     }
-                    return c;
-                },
-                parFilter=function(num){
-                    var a=[],s=0;
-                    for(var i in data){
-                       if(data[i].parent==num){
-                           a.push(i);
-                       }
+                }
+                this.first=false;
+                this.append();
+                this.callback(this.$every);
+            };
+            /*获得子列表菜单*/
+            Core.prototype.dataGetChild=function(id){
+                var cache=[];
+                for(var i in this.data){
+                    if(this.data[i][this.option.def_parent]==id){
+                        cache[i]= this.data[i];
+                        if(!this.first){
+                            cache[i][this.option.def_active]=false;
+                        }
                     }
-                    return a;
-                },
-                appendto=function(num,level){
-                    $s[num+1].append(gethtml(num));
-                    for(var i in data)
-                },
-                init=function(){
-                    var num= 0,
-                        level= 1,
-                        con=getHtml(num);
-
                 }
-                ;
-            $all.each(function(){
-               var level=$(this).data('select-level');
-                if(level && level<=l){
-                    $s[level]=$(this);
+                return cache;
+            };
+            /*获取active选项id*/
+            Core.prototype.getActive=function(data){
+                for(var i in data){
+                    if(true==data[i][this.option.def_active]){
+                        return data[i][this.option.def_id];
+                    }
                 }
-            });
-            appendto(0);
+                return false;
+            };
+            /*生成dom*/
+            Core.prototype.getHtml=function(val,name,select){
+                var sel=true==!!select?'selected':'';
+                return "<option value='"+val+"' "+sel+">"+name+"</option>"
+            };
+            /*根据level 中 data 插入dom*/
+            Core.prototype.append=function(){
+                var len=this.$every.length,cache=[];
+                if(len!=this.level.length){
+                    return false;
+                }
+                for(var i=0;i<len;i++){
+                    cache[i]='';
+                    if(!!this.level[i].defaultText){
+                        cache[i]=this.getHtml(this.level[i].defaultVal,this.level[i].defaultText,false);
+                    }
+                    var data=this.level[i].data;
+                    for(var n in data){
+                        cache[i]+=this.getHtml(data[n][this.option.def_id],data[n][this.option.def_name],!!data[n][this.option.def_active]);
+                    }
+                }
+                for(var m in cache){
+                    this.$every[m].empty().append(cache[m]);
+                }
+            };
 
-        }
-    });
+            Core.prototype.eventBind=function(val,level){
+                console.log(val,level);
 
-    $.DbxSelect('type',JSON.parse('<?php echo json_encode($type_list) ?>'),{
-        level:{
-            1:{
-                defaultText:'选择分类',
-                defaultVal:0
-            },
-            2:{
-                defaultText:'',
-                defaultVal:0
-            }
-        }
-    });
-    /*二级selsect*//*
-    var type_list='<?php echo json_encode($type_list)?>';
-    var parent="<option value='0'>-请选择-</option>",
-        data={};
-    try{data=JSON.parse(type_list)}catch (e){}
+            };
+            Core.prototype.callBack=function(){
+                  var
+                  for(var i in this.level){
+                      if(!!this.level[i].data){
 
-    for(var i in data){
-        if(data[i].parent==0){
-            parent+="<option value='"+data[i].id+"'>"+data[i].name+"</option>";
-        }
-    }
-    $('#type_select_parent').empty().append(parent).change(function(){
-        var val=$(this).val(),child='';
-        for(var n in data){
-            if(data[n].parent==val && data[n].parent!=0){
-                child+="<option value='"+data[n].id+"'>"+data[n].name+"</option>";
-            }
-        }
-        if(child!=''){
-            $('#type_select_child_display').removeClass('hide');
-            $('#type_select_child').empty().append(child)
-        }
-        else{
-            $('#type_select_child_display').addClass('hide');
-        }
+                      }
+                  }
+            };
 
-    });*/
+            return Core;
+        })();
 
+        this.DbxSelect=function(type,data,level,option,callback){
+            return new DbxSelectInit(type,data,level,option,callback);
+        }
+    }).call(this);
+
+   DbxSelect(
+       'type',
+       '<?php echo json_encode($type_list) ?>',
+       [
+        {defaultText:'选择分类', defaultVal:0},
+        {defaultText:'', defaultVal:0}
+       ],
+       function(every){
+           if(every.length==2){
+               $('#type_select_child_display').removeClass('hide');
+           }
+           else{
+               $('#type_select_child_display').addClass('hide');
+           }
+       }
+   );
 </script>

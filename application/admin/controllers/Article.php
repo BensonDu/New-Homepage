@@ -82,10 +82,13 @@ class Article extends MY_Controller{
             $ret_data['draw'] = $input['draw'];
 
             $typelist   = $this->base_article_model->type_list();
-            $datacount  = count($ret_data['data']);
+            foreach($typelist as $k =>$v){
+                $typenameid[$v['id']]=$v;
+            }
 
+            $datacount  = count($ret_data['data']);
             for($i=0;$i<$datacount;$i++){
-                $ret_data['data'][$i]['type']=$typelist[$ret_data['data'][$i]['type']]['name'];
+                $ret_data['data'][$i]['type']=$typenameid[$ret_data['data'][$i]['type']]['name'];
             }
             for($i=0;$i<$datacount;$i++){
                 $ret_data['data'][$i]['handle']=$ret_data['data'][$i]['id'];

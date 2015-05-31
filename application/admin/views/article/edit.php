@@ -251,7 +251,6 @@
                                 this.level[i].display.hasOwnProperty('show') && this.level[i].display.show();
                             }
                         }
-
                     }
                 }
             };

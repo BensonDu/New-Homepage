@@ -70,139 +70,190 @@
     });
 
     (function () {
+        var DbxSelectInit;
         var $ = jQuery;
-        var DbxSelectInit=(function(){
-            function Core(type,data,level,option,callback){
-                this.type=type;
-                this.data=data;
-                this.level=[
-                    {defaultText: '', defaultVal: 0}
-                ];
-                this.option={
-                    def_id:'id',
-                    def_parent:'parent',
-                    def_child:'child',
-                    def_active:'active',
-                    def_name:'name'
-                };
-                this.first=true;
-                this.callback=callback;
-                this.$all=$('select[data-select-class='+this.type+']');
-                this.init(data,level,option,callback);
-            }
-            Core.prototype.init=function(data,lev,opt,call){
-                var $this=this,$every=this.$every=[];
-                if(typeof lev != 'undefined'){
-                    $.extend(true,this.level,lev);
-                }
-                if(typeof opt == 'object'){
-                    $.extend(true,this.option,opt);
-                }
-                if(typeof opt == 'function'){
-                    this.callback=opt;
-                }
-                if(typeof data == 'string'){
-                    try{
-                        this.data=JSON.parse(data);
+        DbxSelectInit = (function () {
+            function Core(type, data, level, option, callback) {
+                this.type = type;
+                this.data = data;
+                this.level = [
+                    {
+                        defaultText: '', defaultVal: 0, display: {
+                        show: function () {
+                        },
+                        hide: function () {
+                        }
                     }
-                    catch (e){
+                    }
+                ];
+                this.option = {
+                    def_id: 'id',
+                    def_parent: 'parent',
+                    def_child: 'child',
+                    def_active: 'active',
+                    def_name: 'name'
+                };
+                this.callback = function () {
+                };
+                this.$all = $('select[data-select-class=' + this.type + ']');
+                this.init(data, level, option, callback);
+            }
+
+            Core.prototype.init = function (data, lev, opt, call) {
+                var $this = this, $every = this.$every = [], count = 1;
+                if (typeof lev != 'undefined') {
+                    $.extend(true, this.level, lev);
+                }
+                if (typeof opt == 'object') {
+                    $.extend(true, this.option, opt);
+                }
+                if (typeof opt == 'function') {
+                    this.callback = opt;
+                }
+                if (typeof data == 'string') {
+                    try {
+                        this.data = JSON.parse(data);
+                    }
+                    catch (e) {
 
                     }
                 }
-                this.$all.change(function(){
-                   $this.eventBind($(this).val(),$(this).data('select-level'));
+                this.$all.change(function () {
+                    //level修正
+                    var val = $(this).val(), level = parseInt($(this).data('select-level')) - 1;
+                    $this.eventFill(val, level);
                 });
 
                 this.$all.each(function () {
-                    var offset=$(this).data('select-level');
-                    $every[offset-1]=$(this);
+                    var offset = $(this).data('select-level');
+                    if (offset == count) {
+                        count++;
+                        $every[offset - 1] = $(this);
+                    }
                 });
                 this.firstFill();
-                //this.debug();
-            };
-            Core.prototype.debug=function(){
-
             };
             /*首次执行（需对active 处理）*/
-            Core.prototype.firstFill=function(){
-                var len=this.$all.length;
-                if(len!=this.level.length){
+            Core.prototype.firstFill = function () {
+                var len = this.$all.length;
+                if (len != this.level.length) {
                     return false;
                 }
-                for(var i=0;i<len;i++){
-                    if(i==0){
-                        this.level[i].data=this.dataGetChild(i);
+                for (var i = 0; i < len; i++) {
+                    if (i == 0) {
+                        this.level[i].data = this.firstDataGetChild(i);
                     }
-                    else{
-                        var act=this.getActive(this.level[i-1].data);
-                        if(!!act){
-                            this.level[i].data=this.dataGetChild(act);
+                    else {
+                        var act = this.getActive(this.level[i - 1].data);
+                        if (!!act) {
+                            this.level[i].data = this.firstDataGetChild(act);
                         }
                     }
                 }
-                this.first=false;
                 this.append();
+                this.display();
                 this.callback(this.$every);
             };
-            /*获得子列表菜单*/
-            Core.prototype.dataGetChild=function(id){
-                var cache=[];
-                for(var i in this.data){
-                    if(this.data[i][this.option.def_parent]==id){
-                        cache[i]= this.data[i];
-                        if(!this.first){
-                            cache[i][this.option.def_active]=false;
-                        }
+            /*事件驱动的菜单操作*/
+            Core.prototype.eventFill = function (val, level) {
+                var len = this.$all.length,level=!!level?level:0;
+                if (len != this.level.length) {
+                    return false;
+                }
+                this.dataGetChild(val,level);
+                this.append();
+                this.display();
+                this.callback(this.$every);
+            };
+            /*初次获得子列表*/
+            Core.prototype.firstDataGetChild = function (id) {
+                var cache = [];
+                for (var i in this.data) {
+                    if (this.data[i][this.option.def_parent] == id) {
+                        cache[i] = this.data[i];
                     }
                 }
                 return cache;
             };
+            /*获得子列表*/
+            Core.prototype.dataGetChild = function (active,level) {
+                for(var m in this.level){
+                    if(m>=level && this.level.hasOwnProperty(m) ){
+                       for(var n in this.level[m].data){
+                           if( this.level[m].data[n][this.option.def_id]==active){
+                               this.level[m].data[n][this.option.def_active]=true;
+                           }
+                           else{
+                               this.level[m].data[n][this.option.def_active]=false;
+                           }
+
+                       }
+                        var offset=parseInt(m)+1;
+                        if(this.level.hasOwnProperty(offset)){
+                            if(level==0 && active ==0){
+                                this.level[offset].data = [];
+                            }
+                            else{
+                                this.level[offset].data = this.firstDataGetChild(active);
+                            }
+                        }
+
+                    }
+
+                }
+
+            };
             /*获取active选项id*/
-            Core.prototype.getActive=function(data){
-                for(var i in data){
-                    if(true==data[i][this.option.def_active]){
+            Core.prototype.getActive = function (data) {
+                for (var i in data) {
+                    if (true == data[i][this.option.def_active]) {
                         return data[i][this.option.def_id];
                     }
                 }
                 return false;
             };
             /*生成dom*/
-            Core.prototype.getHtml=function(val,name,select){
-                var sel=true==!!select?'selected':'';
-                return "<option value='"+val+"' "+sel+">"+name+"</option>"
+            Core.prototype.getHtml = function (val, name, select) {
+                var sel = true == !!select ? 'selected' : '';
+                return "<option value='" + val + "' " + sel + ">" + name + "</option>"
             };
             /*根据level 中 data 插入dom*/
-            Core.prototype.append=function(){
-                var len=this.$every.length,cache=[];
-                if(len!=this.level.length){
+            Core.prototype.append = function () {
+                var len = this.$every.length, cache = [];
+
+                if (len != this.level.length) {
                     return false;
                 }
-                for(var i=0;i<len;i++){
-                    cache[i]='';
-                    if(!!this.level[i].defaultText){
-                        cache[i]=this.getHtml(this.level[i].defaultVal,this.level[i].defaultText,false);
+
+                for (var i = 0; i < len; i++) {
+                    cache[i] = '';
+                    if (!!this.level[i].defaultText) {
+                        cache[i] = this.getHtml(this.level[i].defaultVal, this.level[i].defaultText, false);
                     }
-                    var data=this.level[i].data;
-                    for(var n in data){
-                        cache[i]+=this.getHtml(data[n][this.option.def_id],data[n][this.option.def_name],!!data[n][this.option.def_active]);
+                    var data = this.level[i].data;
+                    for (var n in data) {
+                        cache[i] += this.getHtml(data[n][this.option.def_id], data[n][this.option.def_name], !!data[n][this.option.def_active]);
                     }
                 }
-                for(var m in cache){
+                for (var m in cache) {
                     this.$every[m].empty().append(cache[m]);
                 }
             };
+            /*选项栏是否显示 基于level data*/
+            Core.prototype.display = function () {
+                for (var i in this.level) {
+                    if (i > 0) {
+                        if (this.level[i].hasOwnProperty('display')) {
+                            if (!this.level[i].data.length) {
+                                this.level[i].display.hasOwnProperty('hide') && this.level[i].display.hide();
+                            }
+                            else {
+                                this.level[i].display.hasOwnProperty('show') && this.level[i].display.show();
+                            }
+                        }
 
-            Core.prototype.eventBind=function(val,level){
-                console.log(val,level);
-
-            };
-            Core.prototype.callBack=function(){
-                  var
-                  for(var i in this.level){
-                      if(!!this.level[i].data){
-
-                      }
-                  }
+                    }
+                }
             };
 
             return Core;
@@ -217,16 +268,26 @@
        'type',
        '<?php echo json_encode($type_list) ?>',
        [
-        {defaultText:'选择分类', defaultVal:0},
-        {defaultText:'', defaultVal:0}
-       ],
-       function(every){
-           if(every.length==2){
-               $('#type_select_child_display').removeClass('hide');
-           }
-           else{
-               $('#type_select_child_display').addClass('hide');
-           }
-       }
+        {
+            defaultText:'选择分类',
+            defaultVal:0,
+            display:{
+                show:function(){},
+                hide:function(){}
+            }
+        },
+        {
+            defaultText:'',
+            defaultVal:0,
+            display:{
+                show:function(){
+                    $('#type_select_child_display').removeClass('hide');
+                },
+                hide:function(){
+                    $('#type_select_child_display').addClass('hide');
+                }
+            }
+        }
+       ]
    );
 </script>

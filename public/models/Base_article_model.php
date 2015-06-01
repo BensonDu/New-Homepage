@@ -23,6 +23,9 @@ class Base_article_model extends Base_db_model
         $ret= $this->select($this->table,$where);
         return isset($ret[0])?$ret[0]:array();
     }
+    public function del_article($where){
+        return $this->delete($this->table,$where);
+    }
 
 
 

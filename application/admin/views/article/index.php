@@ -44,7 +44,7 @@
 <script>
     $.extend({
         'Dateformat':function(stamp){
-            var t=new Date(1e3*parseInt(stamp)),y= t.getFullYear(),m= t.getMonth(),d= t.getDate(),h= t.getHours(),i= t.getMinutes(),s= t.getSeconds();
+            var t=new Date(1e3*parseInt(stamp)),y= t.getFullYear(),m= t.getMonth()+1,d= t.getDate(),h= t.getHours(),i= t.getMinutes(),s= t.getSeconds();
             return y+'年'+m+'月'+d+'日 '+h+':'+i+':'+s;
         }
     });

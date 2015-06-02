@@ -60,11 +60,12 @@ class Article extends MY_Controller{
 
     }
     public function del($id=null){
-        if(!$id){
-            if($this->base_article_model->del_article(array('id'=>$id))){
+        if($id){
+            if($this->base_article_model->del_article("`id` in (".$id.")")){
                 $this->out_put(0);
             }
         }
+
     }
     public function article_list(){
 
